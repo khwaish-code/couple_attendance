@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Us, Every Day 💗</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Pacifico&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--pink:#f7a8c4;--deep:#b84f7b;--pale:#fff1f6;--cream:#fffafd;--ink:#563b49;--muted:#967d89;--green:#dff5e8;--red:#ffe1e8;--gold:#fff0c9}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(135deg,#fff5f8,#fdf0fa);font-family:Nunito,sans-serif;color:var(--ink);min-height:100vh}
+.wrap{max-width:1050px;margin:auto;padding:24px}.brand{font-family:Pacifico,cursive;color:var(--deep);font-size:34px;text-align:center;margin:12px 0 4px}.sub{text-align:center;color:var(--muted);margin:0 0 24px}
+.panel{background:#ffffffdb;border:1px solid #f7dce7;border-radius:24px;padding:22px;box-shadow:0 12px 35px #c66b8b12;margin:16px 0}
+.auth{max-width:430px;margin:28px auto}.row{display:flex;gap:12px;flex-wrap:wrap}.row>*{flex:1}
+label{display:block;font-weight:800;font-size:13px;margin:12px 0 5px}input,select{width:100%;padding:13px 14px;border:1px solid #f0cbd9;border-radius:14px;background:#fffafd;color:var(--ink);font:inherit;outline-color:var(--pink)}
+button{border:0;border-radius:14px;padding:12px 17px;background:var(--deep);color:white;font:800 14px Nunito;cursor:pointer}button.secondary{background:#ffe5ef;color:var(--deep)}button:disabled{opacity:.5;cursor:not-allowed}
+.note{font-size:13px;color:var(--muted);line-height:1.5}.hidden{display:none!important}.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+h2{font-size:20px;margin:0 0 8px}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.stat{background:var(--pale);padding:16px;border-radius:18px;text-align:center}.stat b{display:block;font-size:27px;color:var(--deep)}.stat span{font-size:12px;color:var(--muted);font-weight:800}
+.people{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.person{background:#fff7fa;border:1px solid #f5dce6;border-radius:18px;padding:16px}.person h3{margin:0 0 10px}.status{display:inline-block;padding:5px 10px;border-radius:99px;font-size:12px;font-weight:800;background:#f7e7ee}
+.calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:7px}.dayname{text-align:center;color:var(--muted);font-size:12px;font-weight:800;padding:5px}.day{min-height:76px;border-radius:13px;background:#fff5f8;padding:8px;font-size:12px;border:1px solid #f8e1e9}.day strong{display:block;font-size:14px}.present{background:#e5f7eb}.absent{background:#ffe4ea}.holiday{background:#fff3d5}.future{opacity:.5}
+#message{white-space:pre-wrap;margin-top:12px;font-size:13px;color:var(--deep);font-weight:700}
+@media(max-width:650px){.stats{grid-template-columns:1fr 1fr}.people{grid-template-columns:1fr}.wrap{padding:14px}.day{min-height:65px;padding:5px}}
+</style></head>
+<body><main class="wrap">
+<div class="brand">Us, Every Day 💗</div><p class="sub">A little record of all our together-days</p>
+<section id="auth" class="panel auth">
+<h2>Welcome back, lovebirds 🌷</h2><p class="note">Sign in with your own account. The first person creates the shared couple space; the second joins using the same couple code.</p>
+<label>Email</label><input id="email" type="email" autocomplete="email" placeholder="you@example.com">
+<label>Password</label><input id="password" type="password" autocomplete="current-password" placeholder="At least 8 characters">
+<div class="row" style="margin-top:16px"><button id="signup">Create account</button><button class="secondary" id="signin">Log in</button></div>
+<div id="joinbox" class="hidden"><label>Couple code (for the second account)</label><input id="coupleCode" placeholder="Enter shared couple code"><div class="row" style="margin-top:12px"><button id="join">Join our space</button><button class="secondary" id="createSpace">Create our space</button></div></div>
+<p class="note">After the first signup, copy the couple code from the dashboard and share it privately with your partner.</p><div id="authmsg"></div>
+</section>
+<section id="app" class="hidden">
+<div class="panel top"><div><b id="hello">Our little space 💕</b><div class="note" id="coupleline"></div></div><button class="secondary" id="logout">Log out</button></div>
+<div class="panel"><div class="top"><h2>Today’s check-in 🌸</h2><span class="status" id="todayLabel"></span></div>
+<p class="note">Each of you marks your own availability. Both unavailable = holiday; only one available = the available person is present and the other is absent.</p>
+<div class="people">
+<div class="person"><h3>💗 Your status</h3><div id="myStatus" class="status">Not marked</div><div style="margin-top:12px"><button id="myYes">I'm available</button> <button class="secondary" id="myNo">Not available</button></div></div>
+<div class="person"><h3>🩷 Partner's status</h3><div id="partnerStatus" class="status">Waiting for check-in</div><p class="note" id="partnerHint">Your partner marks their own status from their account.</p></div>
+</div><div id="message"></div></div>
+<div class="panel"><h2>Our attendance stats ✨</h2><div class="stats">
+<div class="stat"><b id="myPct">—</b><span>Your attendance</span></div><div class="stat"><b id="partnerPct">—</b><span>Partner attendance</span></div><div class="stat"><b id="meetDays">—</b><span>Together days</span></div>
+</div><p class="note" id="statsNote">Attendance = present days ÷ (present + absent days). Shared holidays are excluded.</p>
+<div class="row"><div><label>Month</label><input type="month" id="month"></div><div style="align-self:end"><button class="secondary" id="refresh">Refresh</button></div></div>
+</div>
+<div class="panel"><h2>Our month in little moments 📅</h2><div class="calendar" id="calendar"></div><p class="note">💚 Both present · 💗 Absent for one person · 🌼 Holiday (excluded) · Blank = not recorded</p></div>
+<div class="panel"><h2>Couple space settings 🔐</h2><p class="note">Share this code with your partner only. Anyone with the code can attempt to join, so keep it private.</p><div class="top"><code id="codeView"></code><button class="secondary" id="copyCode">Copy code</button></div></div>
+</section>
+</main>
+<script>
+const SUPABASE_URL = "PASTE_YOUR_SUPABASE_PROJECT_URL";
+const SUPABASE_ANON_KEY = "PASTE_YOUR_SUPABASE_ANON_KEY";
+const configured = SUPABASE_URL.startsWith("https://") && !SUPABASE_URL.includes("PASTE_") && !SUPABASE_ANON_KEY.includes("PASTE_");
+const $ = id => document.getElementById(id);
+let sb, user, couple, profile, partner, records=[];
+function msg(t){$("message").textContent=t}
+function authmsg(t){$("authmsg").textContent=t}
+function localDate(d=new Date()){return [d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-")}
+function pct(present,absent){let n=present+absent;return n?Math.round(present/n*100)+"%":"—"}
+async function init(){
+ if(!configured){authmsg("Setup needed: follow README.md to connect your private Supabase database.");return}
+ sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+ const {data:{session}}=await sb.auth.getSession(); if(session) await enter(session.user);
+ sb.auth.onAuthStateChange((_e,s)=>{if(s) enter(s.user);else showAuth()});
+}
+function showAuth(){$("auth").classList.remove("hidden");$("app").classList.add("hidden")}
+async function enter(u){
+ user=u; const {data:p,error}=await sb.from("profiles").select("*").eq("id",u.id).maybeSingle();
+ if(error){authmsg(error.message);return}
+ if(!p){
+   $("joinbox").classList.remove("hidden");
+   $("auth").classList.remove("hidden"); $("app").classList.add("hidden");
+   authmsg("Choose Create our space for the first account, or enter your partner's code to join.");
+   return;
+ } else {profile=p; couple=p.couple_id;}
+ $("auth").classList.add("hidden");$("app").classList.remove("hidden");
+ await load();
+}
+async function load(){
+ const {data:members}=await sb.from("profiles").select("*").eq("couple_id",couple);
+ const {data:coupleRow}=await sb.from("couples").select("invite_code").eq("id",couple).single();
+ partner=(members||[]).find(x=>x.id!==user.id)||null;
+ $("hello").textContent="Our little space 💕";
+ $("coupleline").textContent="Two hearts, one shared calendar";
+ $("codeView").textContent=coupleRow?.invite_code||"—";
+ $("todayLabel").textContent=new Date().toLocaleDateString(undefined,{weekday:"long",month:"short",day:"numeric"});
+ $("month").value=$("month").value||localDate().slice(0,7);
+ const {data:r,error}=await sb.from("attendance").select("*").eq("couple_id",couple).order("day");
+ if(error){msg(error.message);return} records=r||[]; render();
+}
+function render(){
+ const today=localDate(), mine=records.find(x=>x.day===today&&x.user_id===user.id), theirs=partner&&records.find(x=>x.day===today&&x.user_id===partner.id);
+ $("myStatus").textContent=mine?(mine.available?"Available ❤️":"Not available 💗"):"Not marked";
+ $("partnerStatus").textContent=theirs?(theirs.available?"Available ❤️":"Not available 💗"):"Waiting for check-in";
+ const y=mine?.available, z=theirs?.available;
+ msg(y===undefined||z===undefined?"Waiting for both check-ins to determine today's result.":y&&z?"Both present today! 💚":!y&&!z?"A shared holiday 🌼 — excluded from attendance.":y?"You are present; your partner is absent.":"You are absent; your partner is present.");
+ const month=$("month").value, [yy,mm]=month.split("-").map(Number), days=new Date(yy,mm,0).getDate();
+ const dayRecords=records.filter(x=>x.day.startsWith(month));
+ let counts={}; for(let d=1;d<=days;d++){let key=month+"-"+String(d).padStart(2,"0");let a=dayRecords.find(x=>x.day===key&&x.user_id===user.id),b=partner&&dayRecords.find(x=>x.day===key&&x.user_id===partner.id);let result=a&&b?(a.available&&b.available?"present":!a.available&&!b.available?"holiday":"absent"):"";counts[key]={a,b,result};}
+ let mineP=0,mineA=0,partP=0,partA=0,together=0,holidays=0;
+ Object.values(counts).forEach(v=>{if(v.a&&v.b){if(v.result==="holiday")holidays++;else{if(v.a.available)mineP++;else mineA++;if(v.b.available)partP++;else partA++;if(v.result==="present")together++;}}});
+ $("myPct").textContent=pct(mineP,mineA);$("partnerPct").textContent=pct(partP,partA);$("meetDays").textContent=together;
+ $("statsNote").textContent=`${holidays} shared holiday(s) excluded. ${mineP+mineA} counted day(s) for you; ${partP+partA} for your partner.`;
+ const cal=$("calendar");cal.innerHTML="";
+ ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].forEach(n=>{let e=document.createElement("div");e.className="dayname";e.textContent=n;cal.append(e)});
+ for(let i=0;i<new Date(yy,mm-1,1).getDay();i++){let e=document.createElement("div");cal.append(e)}
+ for(let d=1;d<=days;d++){let key=month+"-"+String(d).padStart(2,"0"),v=counts[key],e=document.createElement("div");e.className="day "+(v.result==="present"?"present":v.result==="holiday"?"holiday":v.result==="absent"?"absent":"");e.innerHTML="<strong>"+d+"</strong>"+(v.result==="present"?"💚 Both":v.result==="holiday"?"🌼 Holiday":v.result==="absent"?"💗 One absent":v.a||v.b?"…":"");cal.append(e)}
+}
+async function mark(available){
+ const {error}=await sb.from("attendance").upsert({couple_id:couple,user_id:user.id,day:localDate(),available},{onConflict:"user_id,day"});
+ if(error){msg(error.message);return} await load();
+}
+$("signup").onclick=async()=>{if(!configured)return;const {data,error}=await sb.auth.signUp({email:$("email").value,password:$("password").value});if(error)authmsg(error.message);else authmsg(data.session?"Account created.":"Check your email to confirm, then log in.");};
+$("signin").onclick=async()=>{if(!configured)return;const {error}=await sb.auth.signInWithPassword({email:$("email").value,password:$("password").value});if(error)authmsg(error.message)};
+$("join").onclick=async()=>{const code=$("coupleCode").value.trim().toUpperCase();const {data,error}=await sb.rpc("join_couple",{invite:code});if(error)authmsg(error.message);else{profile=data;couple=data.couple_id;await enter(user)}};
+$("createSpace").onclick=async()=>{const {data,error}=await sb.rpc("create_couple");if(error)authmsg(error.message);else{profile=data;couple=data.couple_id;await enter(user)}};
+$("myYes").onclick=()=>mark(true);$("myNo").onclick=()=>mark(false);
+$("refresh").onclick=load;$("month").onchange=render;
+$("logout").onclick=()=>sb.auth.signOut();
+$("copyCode").onclick=async()=>{await navigator.clipboard.writeText($("codeView").textContent);$("copyCode").textContent="Copied! 💗"};
+init();
+</script></body></html>
